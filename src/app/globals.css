@@ -4,6 +4,7 @@
 
 html {
   background: #050713;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -11,6 +12,29 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   background: transparent;
+}
+
+.dashboard-scroll {
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dashboard-scroll .dark-card,
+.dashboard-scroll .dark-stat {
+  backdrop-filter: none;
+  background-color: rgba(5, 7, 19, 0.86);
+}
+
+.bg-gradient-layer,
+.bg-map-lines,
+.bg-travel-dust,
+.bg-vignette,
+.bg-noise,
+.bg-orb {
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 /* ============== ANIMATED AURORA MAP BACKGROUND ============== */

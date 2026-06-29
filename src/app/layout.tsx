@@ -7,7 +7,7 @@ const spaceMono = Space_Mono({ weight: ["400", "700"], subsets: ["latin"], varia
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" });
 
 export const metadata: Metadata = {
-  title: "WanderLedger Travel Journal",
+  title: "ExpenseHub",
   description: "Track personal expenses and manage shared group expenses seamlessly.",
 };
 

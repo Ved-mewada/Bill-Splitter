@@ -1,4 +1,4 @@
--- Supabase Schema for WanderLedger Travel Journal
+-- Supabase Schema for ExpenseHub
 
 -- 0. Clean up existing tables (for safe re-runs)
 DROP TABLE IF EXISTS public.group_expense_payments CASCADE;
@@ -25,7 +25,8 @@ CREATE TABLE public.personal_expenses (
     user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
     amount DECIMAL(10,2) CHECK (amount > 0),
     description TEXT NOT NULL,
-    category TEXT CHECK (category IN ('Food', 'Transport', 'Entertainment', 'Shopping', 'Utilities', 'Health', 'Other')),
+    category TEXT NOT NULL DEFAULT 'Other' CHECK (category IN ('Food', 'Transport', 'Entertainment', 'Shopping', 'Utilities', 'Health', 'Other')),
+    expense_date DATE NOT NULL DEFAULT CURRENT_DATE,
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -70,6 +71,8 @@ CREATE TABLE public.group_expense_payments (
     payer_name TEXT NOT NULL,
     amount DECIMAL(10,2) CHECK (amount > 0),
     description TEXT NOT NULL,
+    category TEXT NOT NULL DEFAULT 'Other' CHECK (category IN ('Food', 'Transport', 'Entertainment', 'Shopping', 'Utilities', 'Health', 'Other')),
+    payment_date DATE NOT NULL DEFAULT CURRENT_DATE,
     created_at TIMESTAMPTZ DEFAULT now()
 );
 

@@ -39,6 +39,7 @@ export default async function GroupDetailPage({ params }: { params: { id: string
     .from('group_expense_payments')
     .select('*')
     .eq('group_id', params.id)
+    .order('payment_date', { ascending: false })
     .order('created_at', { ascending: false })
 
   const members: { id: string; name: string; type: 'auth' | 'local' }[] = [

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { login } from '@/app/actions'
-import { Compass } from 'lucide-react'
+import { Wallet } from 'lucide-react'
 import { Footer } from '@/components/Footer'
 
 export default function LoginPage() {
@@ -28,10 +28,10 @@ export default function LoginPage() {
       <div className="w-full max-w-md dark-card p-8 rounded-xl relative z-10 animate-slide-up">
         <div className="flex flex-col items-center mb-8">
           <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mb-4 border border-blue-400/30 animate-float">
-            <Compass className="w-6 h-6 text-blue-400" />
+            <Wallet className="w-6 h-6 text-blue-400" />
           </div>
-          <h1 className="text-headline-lg text-blue-300 font-manrope animate-fade-in">WanderLedger</h1>
-          <p className="text-label-caps text-blue-200/60 mt-2 animate-fade-in">Travel Journal</p>
+          <h1 className="text-headline-lg text-blue-300 font-manrope animate-fade-in">ExpenseHub</h1>
+          <p className="text-label-caps text-blue-200/60 mt-2 animate-fade-in">Personal &amp; Group Expenses</p>
         </div>
 
         {error && (
@@ -48,7 +48,7 @@ export default function LoginPage() {
               name="email"
               required
               className="w-full dark-input py-2 font-manrope transition-all duration-300 focus:scale-[1.02]"
-              placeholder="explorer@example.com"
+              placeholder="you@example.com"
             />
           </div>
 
@@ -75,7 +75,7 @@ export default function LoginPage() {
 
         <div className="mt-8 text-center border-t border-blue-400/20 pt-6">
           <p className="text-blue-200/60 text-sm font-manrope">
-            Need a passport?{' '}
+            New User?{' '}
             <Link href="/signup" className="text-blue-400 font-bold hover:text-blue-300 transition-colors">
               Sign up here
             </Link>

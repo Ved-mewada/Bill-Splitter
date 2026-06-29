@@ -7,13 +7,24 @@ import { Trash2 } from 'lucide-react'
 interface Expense {
   id: string
   user_id: string
-  amount: number
+  amount: number | string
   description: string
   category: string
+  expense_date?: string | null
   created_at: string
 }
 
 const CATEGORIES = ['Food', 'Transport', 'Entertainment', 'Shopping', 'Utilities', 'Health', 'Other']
+
+function getTodayInputValue() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function formatExpenseDate(expense: Expense) {
+  const dateValue = expense.expense_date || expense.created_at
+  const date = expense.expense_date ? new Date(`${dateValue}T00:00:00`) : new Date(dateValue)
+  return date.toLocaleDateString('en-GB')
+}
 
 export function AddExpenseForm() {
   const [loading, setLoading] = useState(false)
@@ -39,14 +50,14 @@ export function AddExpenseForm() {
       {error && <div className="text-red-400 mb-4 text-sm">{error}</div>}
       
       <form id="add-expense-form" action={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-label-caps text-blue-200/70 mb-1">Description</label>
             <input 
               type="text" 
               name="description" 
               required
-              placeholder="E.g., Dinner at Goa"
+              placeholder="E.g., Dinner out"
               className="w-full dark-input py-2 font-manrope transition-all duration-300 focus:scale-[1.02]"
             />
           </div>
@@ -72,6 +83,17 @@ export function AddExpenseForm() {
               {CATEGORIES.map(cat => <option key={cat} value={cat} className="bg-gray-900 text-gray-200">{cat}</option>)}
             </select>
           </div>
+          <div>
+            <label className="block text-label-caps text-blue-200/70 mb-1">Expense Date</label>
+            <input
+              type="date"
+              name="expenseDate"
+              required
+              defaultValue={getTodayInputValue()}
+              max={getTodayInputValue()}
+              className="w-full dark-input py-2 font-manrope transition-all duration-300 focus:scale-[1.02]"
+            />
+          </div>
         </div>
         
         <div className="flex justify-end pt-4">
@@ -96,7 +118,7 @@ export function ExpenseItem({ expense }: { expense: Expense }) {
     await deleteExpense(expense.id)
   }
 
-  const date = new Date(expense.created_at).toLocaleDateString()
+  const date = formatExpenseDate(expense)
 
   return (
     <div className="expense-item flex items-center justify-between p-4 dark-card rounded-md mb-3 group relative overflow-hidden">

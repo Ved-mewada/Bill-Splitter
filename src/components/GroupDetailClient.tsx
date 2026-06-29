@@ -17,8 +17,10 @@ interface Payment {
   payer_type: 'auth' | 'local'
   payer_id: string
   payer_name: string
-  amount: number
+  amount: number | string
   description: string
+  category?: string | null
+  payment_date?: string | null
   created_at: string
 }
 
@@ -28,6 +30,35 @@ interface Settlement {
   to: string
   toId: string
   amount: number
+}
+
+const CATEGORIES = ['Food', 'Transport', 'Entertainment', 'Shopping', 'Utilities', 'Health', 'Other']
+
+function getTodayInputValue() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function getDateKey(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function getPaymentDate(payment: Payment) {
+  return payment.payment_date ? new Date(`${payment.payment_date}T00:00:00`) : new Date(payment.created_at)
+}
+
+function getPaymentDateKey(payment: Payment) {
+  return payment.payment_date || getDateKey(new Date(payment.created_at))
+}
+
+function formatPaymentDate(payment: Payment) {
+  return getPaymentDate(payment).toLocaleDateString('en-GB')
+}
+
+function formatAmount(amount: number) {
+  return `₹${amount.toFixed(2)}`
 }
 
 function calcSettlements(members: Member[], payments: Payment[]): Settlement[] {
@@ -97,6 +128,8 @@ export function GroupDetailClient({
   const [payerName, setPayerName] = useState(currentUserName)
   const [amount, setAmount] = useState('')
   const [desc, setDesc] = useState('')
+  const [category, setCategory] = useState(CATEGORIES[0])
+  const [paymentDate, setPaymentDate] = useState(getTodayInputValue())
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -105,6 +138,61 @@ export function GroupDetailClient({
 
   const totalPaid = payments.reduce((s, p) => s + Number(p.amount), 0)
   const share = members.length > 0 ? totalPaid / members.length : 0
+
+  const now = new Date()
+  const categoryTotals = CATEGORIES
+    .map(item => ({
+      category: item,
+      total: payments
+        .filter(payment => (payment.category || 'Other') === item)
+        .reduce((sum, payment) => sum + Number(payment.amount), 0),
+    }))
+    .filter(item => item.total > 0)
+    .sort((a, b) => b.total - a.total)
+  const topCategory = categoryTotals[0]
+  const maxCategoryTotal = topCategory?.total || 0
+
+  const payerTotals = members
+    .map(member => ({
+      name: member.name,
+      total: payments
+        .filter(payment => payment.payer_id === member.id)
+        .reduce((sum, payment) => sum + Number(payment.amount), 0),
+    }))
+    .filter(item => item.total > 0)
+    .sort((a, b) => b.total - a.total)
+  const topPayer = payerTotals[0]
+  const maxPayerTotal = topPayer?.total || 0
+
+  const weeklyTotals = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (6 - index))
+    const key = getDateKey(date)
+    return {
+      key,
+      label: date.toLocaleDateString('en-US', { weekday: 'short' }),
+      total: payments
+        .filter(payment => getPaymentDateKey(payment) === key)
+        .reduce((sum, payment) => sum + Number(payment.amount), 0),
+    }
+  })
+  const maxWeeklyTotal = Math.max(...weeklyTotals.map(item => item.total), 0)
+  const biggestDay = weeklyTotals.reduce((best, item) => item.total > best.total ? item : best, weeklyTotals[0])
+
+  const monthlyTotals = Array.from({ length: 6 }, (_, index) => {
+    const date = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1)
+    return {
+      label: date.toLocaleDateString('en-US', { month: 'short' }),
+      month: date.getMonth(),
+      year: date.getFullYear(),
+      total: payments
+        .filter(payment => {
+          const paymentDate = getPaymentDate(payment)
+          return paymentDate.getMonth() === date.getMonth() && paymentDate.getFullYear() === date.getFullYear()
+        })
+        .reduce((sum, payment) => sum + Number(payment.amount), 0),
+    }
+  })
+  const maxMonthlyTotal = Math.max(...monthlyTotals.map(item => item.total), 0)
 
   function showError(msg: string) {
     setError(msg)
@@ -145,13 +233,23 @@ export function GroupDetailClient({
       showError('Invalid amount')
       return
     }
+    if (!category) {
+      showError('Category is required')
+      return
+    }
+    if (!paymentDate) {
+      showError('Payment date is required')
+      return
+    }
     setLoading(true)
     setError(null)
-    const result = await addPayment(group.id, payerType, payerId, payerName, numAmount, desc.trim())
+    const result = await addPayment(group.id, payerType, payerId, payerName, numAmount, desc.trim(), category, paymentDate)
     if (result.error) showError(result.error)
     else {
       setAmount('')
       setDesc('')
+      setCategory(CATEGORIES[0])
+      setPaymentDate(getTodayInputValue())
       showSuccess('Payment added!')
     }
     setLoading(false)
@@ -269,7 +367,7 @@ export function GroupDetailClient({
               <h2 className="text-title-md font-manrope text-blue-300 mb-4 flex items-center gap-2">
                 <DollarSign className="w-5 h-5 text-blue-400" /> Log Payment
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-3">
                 <div>
                   <label className="block text-label-caps text-blue-200/70 mb-1">Who paid?</label>
                   <select
@@ -294,7 +392,7 @@ export function GroupDetailClient({
                     className="w-full dark-input py-1.5 text-sm font-manrope transition-all duration-300 focus:scale-[1.02]"
                   />
                 </div>
-                <div className="sm:col-span-1">
+                <div>
                   <label className="block text-label-caps text-blue-200/70 mb-1">For what?</label>
                   <input
                     type="text"
@@ -305,10 +403,32 @@ export function GroupDetailClient({
                     className="w-full dark-input py-1.5 text-sm font-manrope transition-all duration-300 focus:scale-[1.02]"
                   />
                 </div>
+                <div>
+                  <label className="block text-label-caps text-blue-200/70 mb-1">Category</label>
+                  <select
+                    value={category}
+                    onChange={e => setCategory(e.target.value)}
+                    className="w-full dark-input py-1.5 text-sm font-manrope"
+                  >
+                    {CATEGORIES.map(item => (
+                      <option key={item} value={item} className="bg-gray-900 text-gray-200">{item}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-label-caps text-blue-200/70 mb-1">Payment Date</label>
+                  <input
+                    type="date"
+                    value={paymentDate}
+                    onChange={e => setPaymentDate(e.target.value)}
+                    max={getTodayInputValue()}
+                    className="w-full dark-input py-1.5 text-sm font-manrope transition-all duration-300 focus:scale-[1.02]"
+                  />
+                </div>
                 <div className="flex items-end">
                   <button
                     onClick={handleAddPayment}
-                    disabled={loading || !amount || !desc.trim()}
+                    disabled={loading || !amount || !desc.trim() || !paymentDate}
                     className="boarding-pass-btn dark-btn px-5 py-2 text-label-caps transition-all duration-300 disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98] w-full text-sm"
                   >
                     {loading ? 'Adding...' : 'Add'}
@@ -324,6 +444,111 @@ export function GroupDetailClient({
               <p className="text-sm font-manrope text-blue-200/50">Use the members panel to add friends.</p>
             </div>
           )}
+
+          <section className="dark-card p-5 rounded-lg animate-slide-up">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between border-b border-blue-400/20 pb-4 mb-5">
+              <div>
+                <h2 className="text-title-md font-manrope text-blue-300">Analyze Group Expense</h2>
+                <p className="text-sm font-manrope text-blue-200/50 mt-1">Compare categories, payers, weekly spending, and monthly totals.</p>
+              </div>
+              {topCategory ? (
+                <div className="rounded-full border border-blue-400/20 bg-blue-500/10 px-4 py-2 text-sm font-manrope text-blue-200">
+                  Mostly spent on <span className="font-bold text-blue-300">{topCategory.category}</span>
+                </div>
+              ) : null}
+            </div>
+
+            {payments.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-journal-note text-blue-200/70 mb-1">No group analysis yet.</p>
+                <p className="text-sm font-manrope text-blue-200/50">Log group payments to see trends and comparisons.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                <div className="dark-stat rounded-lg p-4">
+                  <p className="text-label-caps text-blue-200/60 mb-4">Category Breakdown</p>
+                  <div className="space-y-4">
+                    {categoryTotals.map(item => (
+                      <div key={item.category}>
+                        <div className="flex items-center justify-between text-sm font-manrope mb-2">
+                          <span className="text-blue-200">{item.category}</span>
+                          <span className="text-blue-300 font-bold">{formatAmount(item.total)}</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-blue-950/80 overflow-hidden border border-blue-400/10">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-300"
+                            style={{ width: `${Math.max((item.total / maxCategoryTotal) * 100, 8)}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="dark-stat rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-label-caps text-blue-200/60">Paid By Member</p>
+                    {topPayer ? <p className="text-xs font-space text-blue-200/40">Top: {topPayer.name}</p> : null}
+                  </div>
+                  <div className="space-y-4">
+                    {payerTotals.map(item => (
+                      <div key={item.name}>
+                        <div className="flex items-center justify-between text-sm font-manrope mb-2">
+                          <span className="text-blue-200">{item.name}</span>
+                          <span className="text-blue-300 font-bold">{formatAmount(item.total)}</span>
+                        </div>
+                        <div className="h-2 rounded-full bg-blue-950/80 overflow-hidden border border-blue-400/10">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-blue-400 to-cyan-300"
+                            style={{ width: `${Math.max((item.total / maxPayerTotal) * 100, 8)}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="dark-stat rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-label-caps text-blue-200/60">Last 7 Days</p>
+                    <p className="text-xs font-space text-blue-200/40">Peak: {biggestDay.label}</p>
+                  </div>
+                  <div className="flex h-40 items-end gap-3 border-b border-blue-400/20 pb-3">
+                    {weeklyTotals.map(item => (
+                      <div key={item.key} className="flex min-w-0 flex-1 flex-col items-center gap-2">
+                        <div className="flex h-28 w-full items-end justify-center">
+                          <div
+                            className="w-full max-w-8 rounded-t-md bg-gradient-to-t from-blue-600 to-cyan-300 shadow-[0_0_18px_rgba(59,130,246,0.35)]"
+                            style={{ height: maxWeeklyTotal ? `${Math.max((item.total / maxWeeklyTotal) * 100, 8)}%` : '8%' }}
+                            title={`${item.label}: ${formatAmount(item.total)}`}
+                          />
+                        </div>
+                        <span className="text-xs font-space text-blue-200/50">{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="dark-stat rounded-lg p-4">
+                  <p className="text-label-caps text-blue-200/60 mb-4">Monthly Comparison</p>
+                  <div className="space-y-3">
+                    {monthlyTotals.map(item => (
+                      <div key={`${item.year}-${item.month}`} className="grid grid-cols-[3rem_1fr_5rem] items-center gap-3">
+                        <span className="text-xs font-space text-blue-200/50">{item.label}</span>
+                        <div className="h-3 rounded-full bg-blue-950/80 overflow-hidden border border-blue-400/10">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-blue-400 to-cyan-300"
+                            style={{ width: maxMonthlyTotal ? `${Math.max((item.total / maxMonthlyTotal) * 100, 6)}%` : '6%' }}
+                          />
+                        </div>
+                        <span className="text-right text-xs font-space text-blue-200/70">₹{Math.round(item.total)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
 
           {/* Settlements */}
           {settlements.length > 0 && (
@@ -366,7 +591,13 @@ export function GroupDetailClient({
                       </div>
                       <div>
                         <p className="font-manrope font-semibold text-sm text-blue-200">{p.payer_name}</p>
-                        <p className="text-xs text-blue-200/50 font-space">{p.description}</p>
+                        <div className="flex flex-wrap gap-2 text-xs text-blue-200/50 font-space">
+                          <span>{p.description}</span>
+                          <span>•</span>
+                          <span>{p.category || 'Other'}</span>
+                          <span>•</span>
+                          <span>{formatPaymentDate(p)}</span>
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">

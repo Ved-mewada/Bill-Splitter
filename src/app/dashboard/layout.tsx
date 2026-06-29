@@ -25,7 +25,7 @@ export default async function DashboardLayout({
         <MobileNav email={user.email || 'User'} />
         
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 relative">
+        <main className="dashboard-scroll flex-1 overflow-y-auto p-4 md:p-8 relative">
           <div className="max-w-6xl mx-auto w-full flex flex-col min-h-full">
             {children}
             <Footer />

@@ -3,6 +3,8 @@
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
 
+const CATEGORIES = ['Food', 'Transport', 'Entertainment', 'Shopping', 'Utilities', 'Health', 'Other']
+
 export async function createGroup(formData: FormData) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -86,13 +88,22 @@ export async function deleteLocalMember(groupId: string, memberId: string) {
   return { success: true }
 }
 
-export async function addPayment(groupId: string, payerType: 'auth' | 'local', payerId: string, payerName: string, amount: number, description: string) {
+export async function addPayment(groupId: string, payerType: 'auth' | 'local', payerId: string, payerName: string, amount: number, description: string, category: string, paymentDate: string) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Unauthorized' }
 
   if (!amount || amount <= 0) return { error: 'Invalid amount' }
   if (!description) return { error: 'Description is required' }
+  if (!CATEGORIES.includes(category)) return { error: 'Invalid category' }
+  if (!paymentDate || !/^\d{4}-\d{2}-\d{2}$/.test(paymentDate)) return { error: 'Payment date is required' }
+
+  const selectedDate = new Date(`${paymentDate}T00:00:00`)
+  const today = new Date()
+  today.setHours(23, 59, 59, 999)
+  if (Number.isNaN(selectedDate.getTime()) || selectedDate > today) {
+    return { error: 'Payment date cannot be in the future' }
+  }
 
   const { error } = await supabase.from('group_expense_payments').insert({
     group_id: groupId,
@@ -101,6 +112,8 @@ export async function addPayment(groupId: string, payerType: 'auth' | 'local', p
     payer_name: payerName,
     amount,
     description,
+    category,
+    payment_date: paymentDate,
   })
 
   if (error) return { error: error.message }

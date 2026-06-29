@@ -73,7 +73,7 @@ export default async function GroupsPage() {
           <h3 className="text-label-caps text-blue-200/60 mb-4">Groups I Created</h3>
           {createdGroups?.length === 0 ? (
             <div className="text-center p-8 dark-card rounded-lg animate-scale-in">
-              <p className="text-journal-note text-blue-200/70 mb-1">No expeditions founded yet.</p>
+              <p className="text-journal-note text-blue-200/70 mb-1">No groups created yet.</p>
               <p className="text-sm font-manrope text-blue-200/50">Create one above to start sharing expenses.</p>
             </div>
           ) : (
@@ -89,7 +89,7 @@ export default async function GroupsPage() {
           <h3 className="text-label-caps text-blue-200/60 mb-4">Groups I Joined</h3>
           {joinedGroups.length === 0 ? (
             <div className="text-center p-8 dark-card rounded-lg animate-scale-in">
-              <p className="text-journal-note text-blue-200/70 mb-1">No joined expeditions.</p>
+              <p className="text-journal-note text-blue-200/70 mb-1">No groups joined yet.</p>
               <p className="text-sm font-manrope text-blue-200/50">When friends invite you, they will appear here.</p>
             </div>
           ) : (

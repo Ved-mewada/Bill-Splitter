@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Compass, CreditCard, Users, LogOut, Menu, X } from 'lucide-react'
+import { Wallet, CreditCard, Users, LogOut, Menu, X } from 'lucide-react'
 import { logout } from '@/app/actions'
 import { useState } from 'react'
 
@@ -18,7 +18,7 @@ export function Sidebar({ email }: { email: string }) {
     <div className="w-64 bg-[#070b18]/85 backdrop-blur-2xl border-r border-blue-500/15 h-screen flex flex-col hidden md:flex shadow-[18px_0_70px_rgba(0,0,0,0.32)] z-20 animate-slide-up">
       <div className="p-6 border-b border-blue-400/15">
         <h1 className="text-title-md text-blue-300 font-manrope font-bold flex items-center gap-2">
-          <Compass className="w-6 h-6 animate-float text-blue-400" /> WanderLedger
+          <Wallet className="w-6 h-6 animate-float text-blue-400" /> ExpenseHub
         </h1>
       </div>
       
@@ -71,7 +71,7 @@ export function MobileNav({ email }: { email: string }) {
     <div className="md:hidden flex flex-col w-full">
       <div className="flex items-center justify-between p-4 bg-[#070b18]/85 backdrop-blur-2xl border-b border-blue-400/15 shadow-sm z-30">
         <h1 className="text-title-md text-blue-300 font-manrope font-bold flex items-center gap-2">
-          <Compass className="w-6 h-6 text-blue-400" /> WanderLedger
+          <Wallet className="w-6 h-6 text-blue-400" /> ExpenseHub
         </h1>
         <button onClick={() => setIsOpen(!isOpen)} className="text-blue-300 p-2 transition-transform duration-300 hover:scale-110 active:scale-90">
           <span className={`inline-block transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`}>

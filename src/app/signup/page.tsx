@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { signup } from '@/app/actions'
-import { Map } from 'lucide-react'
+import { Receipt } from 'lucide-react'
 import { Footer } from '@/components/Footer'
 
 export default function SignupPage() {
@@ -43,9 +43,9 @@ export default function SignupPage() {
       <div className="w-full max-w-md dark-card p-8 rounded-xl relative z-10 animate-slide-up">
         <div className="flex flex-col items-center mb-8">
           <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mb-4 border border-blue-400/30 animate-float">
-            <Map className="w-6 h-6 text-blue-400" />
+            <Receipt className="w-6 h-6 text-blue-400" />
           </div>
-          <h1 className="text-headline-lg text-blue-300 font-manrope text-center leading-tight animate-fade-in">Create your<br/>Passport</h1>
+          <h1 className="text-headline-lg text-blue-300 font-manrope text-center leading-tight animate-fade-in">Create Account</h1>
         </div>
 
         {error && (
@@ -62,7 +62,7 @@ export default function SignupPage() {
               name="name"
               required
               className="w-full dark-input py-2 font-manrope transition-all duration-300 focus:scale-[1.02]"
-              placeholder="Amelia Earhart"
+              placeholder="Alex Rivera"
             />
           </div>
 
@@ -118,7 +118,7 @@ export default function SignupPage() {
 
         <div className="mt-8 text-center border-t border-blue-400/20 pt-6">
           <p className="text-blue-200/60 text-sm font-manrope">
-            Already have a passport?{' '}
+            Already have an account?{' '}
             <Link href="/login" className="text-blue-400 font-bold hover:text-blue-300 transition-colors">
               Sign in
             </Link>

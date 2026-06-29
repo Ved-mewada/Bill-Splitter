@@ -32,7 +32,7 @@ export function CreateGroupForm() {
 
   return (
     <div className="dark-card p-6 rounded-lg mb-8">
-      <h2 className="text-title-md font-manrope text-blue-300 mb-4 border-b border-blue-400/20 pb-2">Start a New Expedition</h2>
+      <h2 className="text-title-md font-manrope text-blue-300 mb-4 border-b border-blue-400/20 pb-2">Create a New Group</h2>
       
       {error && <div className="text-red-400 mb-4 text-sm">{error}</div>}
       
@@ -44,7 +44,7 @@ export function CreateGroupForm() {
             name="groupName" 
             required
             minLength={3}
-            placeholder="E.g., Goa Trip 2025"
+            placeholder="E.g., Roommates Q3"
             className="w-full dark-input py-2 font-manrope transition-all duration-300 focus:scale-[1.02]"
           />
         </div>
