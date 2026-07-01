@@ -1,4 +1,4 @@
-# ExpenseHub
+# ExpenseHub 
 
 ExpenseHub is a full-stack expense management app for tracking personal spending and splitting shared costs with groups. It combines a modern Next.js dashboard with Supabase authentication, protected database access, category analytics, and settlement calculations for group expenses.
 
